@@ -48,12 +48,11 @@ type PaperTradingStats struct {
 	AverageHoldTime time.Duration
 }
 
-// BinanceConfig holds API configuration for Binance testnet
+// BinanceConfig holds API configuration for Binance
 type BinanceConfig struct {
-	APIKey     string
-	SecretKey  string
-	BaseURL    string // Testnet URL
-	UseTestnet bool
+	APIKey    string
+	SecretKey string
+	BaseURL   string // Mainnet URL
 }
 
 // OrderResponse represents Binance order response
@@ -87,7 +86,6 @@ type AccountInfo struct {
 
 // TradingBot represents our trading bot configuration
 type TradingBot struct {
-	TestMode         bool
 	TotalBudget      float64
 	AvailableBudget  float64 // Track remaining budget
 	InvestmentAmount float64 // Amount to invest per trade (5 EUR)

@@ -17,13 +17,12 @@ import (
 )
 
 // NewTradingBot creates a new trading bot instance
-func NewTradingBot(testMode bool, budget float64) (*TradingBot, error) {
+func NewTradingBot(budget float64) (*TradingBot, error) {
 	// Initialize Binance configuration
 	binanceConfig := BinanceConfig{
-		APIKey:     os.Getenv("BINANCE_API_KEY"),
-		SecretKey:  os.Getenv("BINANCE_SECRET_KEY"),
-		BaseURL:    "https://api.binance.com",
-		UseTestnet: false,
+		APIKey:    os.Getenv("BINANCE_API_KEY"),
+		SecretKey: os.Getenv("BINANCE_SECRET_KEY"),
+		BaseURL:   "https://api.binance.com",
 	}
 
 	// Check if API keys are provided
@@ -32,10 +31,8 @@ func NewTradingBot(testMode bool, budget float64) (*TradingBot, error) {
 	}
 
 	fmt.Println("Starting with real trading - monitor closely!")
-	testMode = false
 
 	bot := &TradingBot{
-		TestMode:         testMode,
 		TotalBudget:      budget,
 		AvailableBudget:  budget,
 		InvestmentAmount: 7.0, // 7 USDT per trade as specified in strategy
@@ -304,7 +301,7 @@ func (bot *TradingBot) executeBuyOrder(symbol string, quoteOrderQty float64) (*O
 	return &orderResp, nil
 }
 
-// executeLimitSellOrder places a limit sell order on Binance testnet
+// executeLimitSellOrder places a limit sell order on Binance
 func (bot *TradingBot) executeLimitSellOrder(symbol string, quantity float64, price float64) (*OrderResponse, error) {
 	if bot.BinanceConfig.APIKey == "" || bot.BinanceConfig.SecretKey == "" {
 		return nil, fmt.Errorf("Binance API credentials not configured")
@@ -536,7 +533,7 @@ func (bot *TradingBot) analyzeTradingOpportunities() {
 	} else {
 		fmt.Printf("Found %d BUY opportunities in the optimal 5-10%% drop range!\n", buyOpportunities)
 		if watchOpportunities > 0 {
-			fmt.Printf("⏳ Plus %d coins approaching the threshold\n", watchOpportunities)
+			fmt.Printf("Plus %d coins approaching the threshold\n", watchOpportunities)
 		}
 	}
 }
@@ -550,7 +547,6 @@ func (bot *TradingBot) executeBuy(coin OptimizedTicker, dropPercentage float64) 
 		return
 	}
 
-	// Since testMode is always false, execute real order on Binance mainnet
 	fmt.Printf("   [BINANCE MAINNET] Executing REAL buy order...\n")
 
 	orderResp, err := bot.executeBuyOrder(coin.Symbol, bot.InvestmentAmount)
@@ -660,7 +656,7 @@ func (bot *TradingBot) runTradingCycle() error {
 	}
 
 	bot.WatchList = watchList
-	fmt.Printf("\n📊 Monitoring %d non-stablecoin coins from CoinMarketCap top 50\n", len(bot.WatchList))
+	fmt.Printf("\nMonitoring %d non-stablecoin coins from CoinMarketCap top 50\n", len(bot.WatchList))
 
 	// Analyze new buy opportunities using CMC data
 	bot.analyzeTradingOpportunities()
@@ -668,23 +664,23 @@ func (bot *TradingBot) runTradingCycle() error {
 	return nil
 }
 
-// startBot starts the trading bot with 5-minute cycles for testing
+// startBot starts the trading bot with 60-minute cycles for testing
 func (bot *TradingBot) startBot() {
 	fmt.Println("Starting Trading Bot...")
 	fmt.Printf("Strategy: Buy on drops between -5%% to -10%% | Sell at +5%% profit\n")
 	fmt.Printf("Budget: %.2f USDT | Investment per trade: %.2f USDT\n", bot.TotalBudget, bot.InvestmentAmount)
-	fmt.Printf("Cycle frequency: Every 5 minutes for active testing\n")
+	fmt.Printf("Cycle frequency: Every 60 minutes for active testing\n")
 
 	// Run initial cycle
 	if err := bot.runTradingCycle(); err != nil {
 		log.Printf("Error in trading cycle: %v", err)
 	}
 
-	// Set up 5-minute ticker for testing
-	ticker := time.NewTicker(5 * time.Minute)
+	// Set up 60-minute ticker for testing
+	ticker := time.NewTicker(60 * time.Minute)
 	defer ticker.Stop()
 
-	fmt.Println("\nBot will run every 5 minutes. Press Ctrl+C to stop.")
+	fmt.Println("\nBot will run every 60 minutes. Press Ctrl+C to stop.")
 
 	for {
 		select {
@@ -735,7 +731,7 @@ func StartTradingBot() {
 	}
 
 	// Initialize bot using real balance
-	bot, err := NewTradingBot(false, realBalance)
+	bot, err := NewTradingBot(realBalance)
 	if err != nil {
 		log.Fatalf("Failed to initialize trading bot: %v", err)
 	}
