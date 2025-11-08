@@ -2,6 +2,12 @@
 
 The philosophy is that the market will always bounce back on the top coins
 
+## Setup
+
+You will need a `Binance KEY` `Binance SECRET KEY` and a `CoinmarketCap API KEY`
+
+You have a `.env.example` file just put the values (keys) and you are good to go
+
 ## Strategy
 
 1. Fetch 20 coins from CMC20(CoinMarketCap 20 Index)
