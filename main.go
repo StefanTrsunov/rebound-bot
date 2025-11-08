@@ -59,8 +59,6 @@ func main() {
 		fmt.Println("Target: 5-10% drops with 5% profit targets")
 		fmt.Println("Now starting the optimized trading bot...")
 		StartTradingBot()
-	case "test-cmc":
-		fmt.Println("Testing optimized CoinMarketCap integration...")
 	default:
 		fmt.Printf("❌ Unknown command: %s\n", command)
 		fmt.Println("Run './trading-bot help' for available commands")
