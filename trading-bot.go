@@ -591,7 +591,11 @@ func (bot *TradingBot) executeBuy(coin OptimizedTicker, dropPercentage float64) 
 			HasActiveSellOrder: false,
 		}
 
-		// Immediately place a limit sell order at target price
+		// Wait a moment for the buy order to fully settle before placing sell order
+		fmt.Printf("   [BINANCE MAINNET] Waiting 3 seconds for buy order to settle...\n")
+		time.Sleep(3 * time.Second)
+
+		// Place a limit sell order at target price
 		fmt.Printf("   [BINANCE MAINNET] Attempting to place sell order for %.6f %s at $%.6f\n",
 			actualQty, strings.TrimSuffix(coin.Symbol, "USDT"), position.TargetSellPrice)
 
@@ -606,9 +610,26 @@ func (bot *TradingBot) executeBuy(coin OptimizedTicker, dropPercentage float64) 
 			fmt.Printf("   [PRICE ADJUSTMENT] Original: $%.6f -> Rounded: $%.6f (TickSize: %s)\n",
 				position.TargetSellPrice, roundedSellPrice, filters.TickSize)
 
-			sellOrderResp, sellErr := bot.executeLimitSellOrder(coin.Symbol, actualQty, roundedSellPrice)
+			// Try to place the sell order with retry logic
+			maxRetries := 3
+			var sellOrderResp *OrderResponse
+			var sellErr error
+
+			for retry := 1; retry <= maxRetries; retry++ {
+				sellOrderResp, sellErr = bot.executeLimitSellOrder(coin.Symbol, actualQty, roundedSellPrice)
+				if sellErr == nil {
+					break
+				}
+
+				fmt.Printf("   RETRY %d/%d: Sell order failed: %v\n", retry, maxRetries, sellErr)
+				if retry < maxRetries {
+					fmt.Printf("   Waiting 2 seconds before retry...\n")
+					time.Sleep(2 * time.Second)
+				}
+			}
+
 			if sellErr != nil {
-				fmt.Printf("   WARNING: Failed to place automatic sell order: %v\n", sellErr)
+				fmt.Printf("   WARNING: Failed to place automatic sell order after %d attempts: %v\n", maxRetries, sellErr)
 				fmt.Printf("   INFO: Position will be monitored manually for sell opportunities\n")
 			} else {
 				position.SellOrderID = sellOrderResp.OrderID
@@ -722,7 +743,7 @@ func StartTradingBot() {
 
 	fmt.Printf("SUCCESS: Real USDT Balance: %.2f USDT\n", realBalance)
 
-	if realBalance < 5.0 {
+	if realBalance < 7.0 {
 		log.Fatalf("ERROR: Insufficient USDT balance (%.2f). Need at least 7 USDT for trading.", realBalance)
 	}
 
